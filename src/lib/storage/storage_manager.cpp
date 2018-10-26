@@ -42,8 +42,6 @@ void StorageManager::print(std::ostream& out) const {
   // Implementation goes here
 }
 
-void StorageManager::reset() {
-  //  _instance = std::make_unique<StorageManager>(); -> ctor is protected here...
-}
+void StorageManager::reset() { get() = StorageManager(); }
 
 }  // namespace opossum
