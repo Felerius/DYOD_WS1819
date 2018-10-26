@@ -78,7 +78,7 @@ class Table : private Noncopyable {
  protected:
   uint32_t _chunk_size;
   std::vector<Chunk> _chunks;
-  std::map<std::string, ColumnID> _column_name_map;
+  std::map<std::string, ColumnID> _name_column_map;
   std::vector<std::string> _column_names;
   std::vector<std::string> _column_types;
 

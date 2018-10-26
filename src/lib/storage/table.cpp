@@ -21,7 +21,7 @@ Table::Table(const uint32_t chunk_size) : _chunk_size{chunk_size} { add_chunk();
 
 void Table::add_column(const std::string& name, const std::string& type) {
   DebugAssert(row_count() == 0, "Columns can only be appended to empty tables");
-  _column_name_map.emplace(name, ColumnID{column_count()});
+  _name_column_map.emplace(name, ColumnID{column_count()});
   _column_names.emplace_back(name);
   _column_types.emplace_back(type);
   _chunks.front().add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(type));
@@ -39,7 +39,7 @@ void Table::append(std::vector<AllTypeVariant> values) {
   }
 }
 
-uint16_t Table::column_count() const { return static_cast<uint16_t>(_column_name_map.size()); }
+uint16_t Table::column_count() const { return static_cast<uint16_t>(_name_column_map.size()); }
 
 uint64_t Table::row_count() const {
   if (_chunks.empty()) {
@@ -52,8 +52,8 @@ uint64_t Table::row_count() const {
 ChunkID Table::chunk_count() const { return ChunkID{static_cast<uint32_t>(_chunks.size())}; }
 
 ColumnID Table::column_id_by_name(const std::string& column_name) const {
-  auto id_it = _column_name_map.find(column_name);
-  DebugAssert(id_it != _column_name_map.end(), "Unknown column name");
+  auto id_it = _name_column_map.find(column_name);
+  DebugAssert(id_it != _name_column_map.end(), "Unknown column name");
   return id_it->second;
 }
 
