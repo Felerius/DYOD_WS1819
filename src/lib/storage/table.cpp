@@ -30,7 +30,7 @@ void Table::add_column(const std::string& name, const std::string& type) {
 }
 
 void Table::append(std::vector<AllTypeVariant> values) {
-  DebugAssert(values.size() == column_count(), "Wrong number of values in append");
+  DebugAssert(values.size() == column_count(), "Number of passed arguments does not match number of columns");
   if (_chunks.back().size() == chunk_size()) {
     _add_chunk();
   }
