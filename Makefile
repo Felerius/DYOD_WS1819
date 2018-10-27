@@ -1,6 +1,6 @@
 # https://github.com/Miroka96/docker-makefile
 
-NAME = hyrise/opossum
+NAME = hyrise_opossum
 TAG = 1.0
 
 VOLUME = ${PWD}
@@ -38,6 +38,9 @@ deploy:
 	docker run --detach --restart always --name=$(NAME) $(VOLUMEMOUNTING) $(PORTPUBLISHING) $(IMAGE)
 
 build-deploy: build deploy
+
+run:
+	docker run -it -v $(shell pwd):/project --name=$(name) --name=$(NAME) $(VOLUMEMOUNTING) $(PORTPUBLISHING) $(IMAGE) bash -l
 
 undeploy:
 	-docker stop $(NAME)
