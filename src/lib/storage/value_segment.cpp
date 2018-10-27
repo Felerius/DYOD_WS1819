@@ -17,7 +17,7 @@ template <typename T>
 const AllTypeVariant ValueSegment<T>::operator[](const size_t offset) const {
   PerformanceWarning("operator[] used");
 
-  return _values[offset];
+  return values()[offset];
 }
 
 template <typename T>
@@ -27,7 +27,7 @@ void ValueSegment<T>::append(const AllTypeVariant& val) {
 
 template <typename T>
 size_t ValueSegment<T>::size() const {
-  return _values.size();
+  return values().size();
 }
 
 template <typename T>
