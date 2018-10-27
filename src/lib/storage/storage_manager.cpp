@@ -41,7 +41,12 @@ std::vector<std::string> StorageManager::table_names() const {
 }
 
 void StorageManager::print(std::ostream& out) const {
-  // Implementation goes here
+  out << "NAME, COLUMNS, ROWS, CHUNKS\n";
+  for (const auto& key_val_pair : _name_table_map) {
+    const auto& table = _name_table_map.at(key_val_pair.first);
+    out << key_val_pair.first << "\t" << table->column_count() << "\t"
+      << table->row_count() << "\t" << table->chunk_count() << "\n";
+  }
 }
 
 void StorageManager::reset() {
