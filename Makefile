@@ -41,6 +41,8 @@ build-deploy: build deploy
 
 run:
 	docker run -it -v $(shell pwd):/project --name=$(name) --name=$(NAME) $(VOLUMEMOUNTING) $(PORTPUBLISHING) $(IMAGE) bash -l
+	-docker stop $(NAME)
+	docker rm $(NAME)
 
 undeploy:
 	-docker stop $(NAME)
