@@ -28,7 +28,9 @@ std::shared_ptr<Table> StorageManager::get_table(const std::string& name) const 
   return _name_table_map.at(name);
 }
 
-bool StorageManager::has_table(const std::string& name) const { return _name_table_map.count(name) == 1; }
+bool StorageManager::has_table(const std::string& name) const {
+  return _name_table_map.count(name) == 1;
+}
 
 std::vector<std::string> StorageManager::table_names() const {
   auto keys = std::vector<std::string>();
@@ -42,6 +44,8 @@ void StorageManager::print(std::ostream& out) const {
   // Implementation goes here
 }
 
-void StorageManager::reset() { get() = StorageManager(); }
+void StorageManager::reset() {
+  get() = StorageManager();
+}
 
 }  // namespace opossum
