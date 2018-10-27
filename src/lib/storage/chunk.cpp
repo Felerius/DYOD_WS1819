@@ -19,7 +19,7 @@ void Chunk::add_segment(std::shared_ptr<BaseSegment> segment) {
 }
 
 void Chunk::append(const std::vector<AllTypeVariant>& values) {
-  DebugAssert(values.size() == column_count(), "Size of values must match number of segments");
+  DebugAssert(values.size() == column_count(), "Number of passed arguments does not match number of columns");
 
   for (ColumnID column_id{0}; column_id < values.size(); ++column_id) {
     get_segment(column_id)->append(values[column_id]);
