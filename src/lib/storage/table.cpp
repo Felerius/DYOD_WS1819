@@ -18,7 +18,7 @@
 namespace opossum {
 
 Table::Table(const uint32_t chunk_size) : _chunk_size{chunk_size} {
-  add_chunk();
+  _add_chunk();
 }
 
 void Table::add_column(const std::string& name, const std::string& type) {
@@ -32,7 +32,7 @@ void Table::add_column(const std::string& name, const std::string& type) {
 void Table::append(std::vector<AllTypeVariant> values) {
   DebugAssert(values.size() == column_count(), "Wrong number of values in append");
   if (_chunks.back().size() == chunk_size()) {
-    add_chunk();
+    _add_chunk();
   }
 
   Chunk& mutable_chunk = _chunks.back();
@@ -99,7 +99,7 @@ void Table::emplace_chunk(Chunk&& chunk) {
   }
 }
 
-void Table::add_chunk() {
+void Table::_add_chunk() {
   Chunk chunk;
   for (const auto& type : _column_types) {
     chunk.add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(type));

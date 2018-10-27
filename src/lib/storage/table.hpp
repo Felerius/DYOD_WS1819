@@ -83,6 +83,6 @@ class Table : private Noncopyable {
   std::vector<std::string> _column_types;
 
  private:
-  void add_chunk();
+  void _add_chunk();
 };
 }  // namespace opossum
