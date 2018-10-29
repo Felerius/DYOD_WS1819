@@ -14,7 +14,7 @@ template <typename T>
 class ValueSegment : public BaseSegment {
  public:
   // return the value at a certain position. If you want to write efficient operators, back off!
-  const AllTypeVariant operator[](const size_t offset) const override;
+  const AllTypeVariant operator[](size_t offset) const override;
 
   // add a value to the end
   void append(const AllTypeVariant& val) override;
@@ -28,7 +28,7 @@ class ValueSegment : public BaseSegment {
   const std::vector<T>& values() const;
 
  protected:
-  // Implementation goes here
+  std::vector<T> _values;
 };
 
 }  // namespace opossum
