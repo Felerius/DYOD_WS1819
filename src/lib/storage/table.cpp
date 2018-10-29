@@ -17,9 +17,7 @@
 
 namespace opossum {
 
-Table::Table(const uint32_t chunk_size) : _chunk_size{chunk_size} {
-  _add_chunk();
-}
+Table::Table(const uint32_t chunk_size) : _chunk_size{chunk_size} { _add_chunk(); }
 
 void Table::add_column(const std::string& name, const std::string& type) {
   DebugAssert(row_count() == 0, "Columns can only be appended to empty tables");
@@ -41,9 +39,7 @@ void Table::append(std::vector<AllTypeVariant> values) {
   }
 }
 
-uint16_t Table::column_count() const {
-  return static_cast<uint16_t>(_name_column_map.size());
-}
+uint16_t Table::column_count() const { return static_cast<uint16_t>(_name_column_map.size()); }
 
 uint64_t Table::row_count() const {
   if (_chunks.empty()) {
@@ -53,9 +49,7 @@ uint64_t Table::row_count() const {
   return (chunk_count() - 1) * chunk_size() + _chunks.back().size();
 }
 
-ChunkID Table::chunk_count() const {
-  return ChunkID{static_cast<uint32_t>(_chunks.size())};
-}
+ChunkID Table::chunk_count() const { return ChunkID{static_cast<uint32_t>(_chunks.size())}; }
 
 ColumnID Table::column_id_by_name(const std::string& column_name) const {
   auto id_it = _name_column_map.find(column_name);
@@ -63,13 +57,9 @@ ColumnID Table::column_id_by_name(const std::string& column_name) const {
   return id_it->second;
 }
 
-uint32_t Table::chunk_size() const {
-  return _chunk_size;
-}
+uint32_t Table::chunk_size() const { return _chunk_size; }
 
-const std::vector<std::string>& Table::column_names() const {
-  return _column_names;
-}
+const std::vector<std::string>& Table::column_names() const { return _column_names; }
 
 const std::string& Table::column_name(ColumnID column_id) const {
   DebugAssert(column_id < column_count(), "Column id out of range");
