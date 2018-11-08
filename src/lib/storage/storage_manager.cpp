@@ -45,8 +45,7 @@ void StorageManager::print(std::ostream& out) const {
   out << "NAME, COLUMNS, ROWS, CHUNKS\n";
   for (const auto& [key, _] : _name_table_map) {
     const auto& table = _name_table_map.at(key);
-    out << key << "\t" << table->column_count() << "\t" << table->row_count() << "\t"
-        << table->chunk_count() << "\n";
+    out << key << "\t" << table->column_count() << "\t" << table->row_count() << "\t" << table->chunk_count() << "\n";
   }
 }
 
