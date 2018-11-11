@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -31,16 +32,40 @@ class DictionarySegment : public BaseSegment {
    */
   explicit DictionarySegment(const std::shared_ptr<BaseSegment>& base_segment) {
     const auto size = base_segment->size();
-    if (size < std::numeric_limits<uint8_t>::max()) {
+
+    // Create map as temporary dictionary
+    std::map<T, uint32_t> temp_dictionary{};
+    for (ValueID value_id{0}; value_id < size; ++value_id) {
+      auto value = type_cast<T>((*base_segment)[value_id]);
+      temp_dictionary[value] = 0;
+    }
+    const auto unique_values = temp_dictionary.size();
+
+    // Create dictionary
+    _dictionary = std::make_shared<std::vector<T>>(unique_values);
+    uint64_t counter = 0;
+    for (auto& [key, value] : temp_dictionary) {
+      value = counter;
+      (*_dictionary)[counter] = key;
+      counter++;
+    }
+
+    // Create attribute vector
+    if (unique_values < std::numeric_limits<uint8_t>::max()) {
       _attribute_vector = std::make_shared<FittedAttributeVector<uint8_t>>(size);
-    } else if (size < std::numeric_limits<uint16_t>::max()) {
+    } else if (unique_values < std::numeric_limits<uint16_t>::max()) {
       _attribute_vector = std::make_shared<FittedAttributeVector<uint16_t>>(size);
     } else {
-      DebugAssert(size < std::numeric_limits<uint32_t>::max(), "Segments cannot be larger than 2^32 items");
+      DebugAssert(unique_values < std::numeric_limits<uint32_t>::max(), "Segments cannot be larger than 2^32 items");
       _attribute_vector = std::make_shared<FittedAttributeVector<uint32_t>>(size);
     }
 
-    // TODO: Implement compression
+    // Fill attribute vector
+    for (ValueID value_id{0}; value_id < size; ++value_id) {
+      auto value = type_cast<T>((*base_segment)[value_id]);
+      auto compressed_value = temp_dictionary[value];
+      _attribute_vector->set(compressed_value, value_id);
+    }
   }
 
   // SEMINAR INFORMATION: Since most of these methods depend on the template parameter, you will have to implement
