@@ -70,7 +70,8 @@ class DictionarySegment : public BaseSegment {
   // returns INVALID_VALUE_ID if all values are smaller than the search value
   ValueID lower_bound(T value) const {
     const auto it = std::lower_bound(_dictionary->begin(), _dictionary->end(), value);
-    return it == _dictionary->end() ? INVALID_VALUE_ID : ValueID{it - _dictionary->begin()};
+    const auto position = ValueID{static_cast<uint32_t>(it - _dictionary->begin())};
+    return it == _dictionary->end() ? INVALID_VALUE_ID : position;
   }
 
   // same as lower_bound(T), but accepts an AllTypeVariant
@@ -80,7 +81,8 @@ class DictionarySegment : public BaseSegment {
   // returns INVALID_VALUE_ID if all values are smaller than or equal to the search value
   ValueID upper_bound(T value) const {
     const auto it = std::upper_bound(_dictionary->begin(), _dictionary->end(), value);
-    return it == _dictionary->end() ? INVALID_VALUE_ID : ValueID{it - _dictionary->begin()};
+    const auto position = ValueID{static_cast<uint32_t>(it - _dictionary->begin())};
+    return it == _dictionary->end() ? INVALID_VALUE_ID : position;
   }
 
   // same as upper_bound(T), but accepts an AllTypeVariant
