@@ -47,8 +47,8 @@ uint64_t Table::row_count() const {
     return 0;
   }
 
-  return std::reduce(_chunks.begin(), _chunks.end(), uint64_t{0},
-                     [](const auto sum, const Chunk& chunk) { return sum + chunk.size(); });
+  return std::accumulate(_chunks.begin(), _chunks.end(), uint64_t{0},
+                         [](const auto sum, const Chunk& chunk) { return sum + chunk.size(); });
 }
 
 ChunkID Table::chunk_count() const { return ChunkID{static_cast<uint32_t>(_chunks.size())}; }
