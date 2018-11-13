@@ -40,12 +40,18 @@ TEST_F(StorageDictionarySegmentTest, CompressSegmentString) {
   // Test dictionary size (uniqueness)
   EXPECT_EQ(dict_col->unique_values_count(), 4u);
 
-  // Test sorting
+  // Test sorting via dictionary
   auto dict = dict_col->dictionary();
   EXPECT_EQ((*dict)[0], "Alexander");
   EXPECT_EQ((*dict)[1], "Bill");
   EXPECT_EQ((*dict)[2], "Hasso");
   EXPECT_EQ((*dict)[3], "Steve");
+
+  // Test sorting via value_by_value_id()
+  EXPECT_EQ(dict_col->value_by_value_id((opossum::ValueID)0), "Alexander");
+  EXPECT_EQ(dict_col->value_by_value_id((opossum::ValueID)1), "Bill");
+  EXPECT_EQ(dict_col->value_by_value_id((opossum::ValueID)2), "Hasso");
+  EXPECT_EQ(dict_col->value_by_value_id((opossum::ValueID)3), "Steve");
 }
 
 TEST_F(StorageDictionarySegmentTest, LowerUpperBound) {
@@ -67,7 +73,5 @@ TEST_F(StorageDictionarySegmentTest, Append) {
   auto col = opossum::make_shared_by_data_type<opossum::BaseSegment, opossum::DictionarySegment>("string", vc_str);
   auto dict_col = std::dynamic_pointer_cast<opossum::DictionarySegment<std::string>>(col);
 
-  EXPECT_THROW({
-    dict_col->append("Hasso");
-  }, std::runtime_error);
+  EXPECT_THROW({ dict_col->append("Hasso"); }, std::runtime_error);
 }
