@@ -61,10 +61,10 @@ class DictionarySegment : public BaseSegment {
     }
 
     // Fill attribute vector
-    for (ValueID value_id{0}; value_id < size; ++value_id) {
-      auto value = type_cast<T>((*base_segment)[value_id]);
-      auto compressed_value = temp_dictionary[value];
-      _attribute_vector->set(compressed_value, value_id);
+    for (size_t position{0}; position < size; ++position) {
+      auto value = type_cast<T>((*base_segment)[position]);
+      auto value_id = ValueID{temp_dictionary[value]};
+      _attribute_vector->set(position, value_id);
     }
   }
 

@@ -24,9 +24,7 @@ void StorageManager::drop_table(const std::string& name) {
   _name_table_map.erase(name);
 }
 
-std::shared_ptr<Table> StorageManager::get_table(const std::string& name) const {
-  return _name_table_map.at(name);
-}
+std::shared_ptr<Table> StorageManager::get_table(const std::string& name) const { return _name_table_map.at(name); }
 
 bool StorageManager::has_table(const std::string& name) const {
   return _name_table_map.find(name) != _name_table_map.end();

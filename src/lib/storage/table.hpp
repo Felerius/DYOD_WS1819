@@ -83,7 +83,7 @@ class Table : private Noncopyable {
   uint32_t _chunk_size;
   std::vector<Chunk> _chunks;
   std::map<std::string, ColumnID> _name_column_map;
-  std::vector<std::string> _column_names; // TODO: Does the performance boost justify the duplicated data structure?
+  std::vector<std::string> _column_names;  // TODO: Does the performance boost justify the duplicated data structure?
   std::vector<std::string> _column_types;
   // Bitset to track chunks which are either compressed or currently being compressed.
   std::vector<bool> _compressed_chunks;

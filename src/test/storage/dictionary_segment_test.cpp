@@ -28,6 +28,15 @@ TEST_F(StorageDictionarySegmentTest, CompressSegmentString) {
   // Test attribute_vector size
   EXPECT_EQ(dict_col->size(), 6u);
 
+  // Test compression
+  auto attribute_vector = dict_col->attribute_vector();
+  EXPECT_EQ((*attribute_vector).get(0), 1u);
+  EXPECT_EQ((*attribute_vector).get(1), 3u);
+  EXPECT_EQ((*attribute_vector).get(2), 0u);
+  EXPECT_EQ((*attribute_vector).get(3), 3u);
+  EXPECT_EQ((*attribute_vector).get(4), 2u);
+  EXPECT_EQ((*attribute_vector).get(5), 1u);
+
   // Test dictionary size (uniqueness)
   EXPECT_EQ(dict_col->unique_values_count(), 4u);
 
@@ -54,4 +63,11 @@ TEST_F(StorageDictionarySegmentTest, LowerUpperBound) {
   EXPECT_EQ(dict_col->upper_bound(15), opossum::INVALID_VALUE_ID);
 }
 
-// TODO(student): You should add some more tests here (full coverage would be appreciated) and possibly in other files.
+TEST_F(StorageDictionarySegmentTest, Append) {
+  auto col = opossum::make_shared_by_data_type<opossum::BaseSegment, opossum::DictionarySegment>("string", vc_str);
+  auto dict_col = std::dynamic_pointer_cast<opossum::DictionarySegment<std::string>>(col);
+
+  EXPECT_THROW({
+    dict_col->append("Hasso");
+  }, std::runtime_error);
+}
