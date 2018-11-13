@@ -9,11 +9,11 @@
 #include <utility>
 #include <vector>
 
-#include "value_segment.hpp"
-
+#include "dictionary_segment.hpp"
 #include "resolve_type.hpp"
 #include "types.hpp"
 #include "utils/assert.hpp"
+#include "value_segment.hpp"
 
 namespace opossum {
 
@@ -26,14 +26,17 @@ void Table::add_column(const std::string& name, const std::string& type) {
   _column_names.emplace_back(name);
   _column_types.emplace_back(type);
   _chunks.front().add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(type));
+  // No locking needed: No elements in table, so no full chunks and thus
+  // nothing which might be compressed concurrently.
+  _compressed_chunks.emplace_back(false);
 }
 
 void Table::append(std::vector<AllTypeVariant> values) {
   DebugAssert(values.size() == column_count(), "Number of passed arguments does not match number of columns");
-  if (_chunks.back().size() == chunk_size()) {
-    _add_chunk().append(std::move(values));
-  } else {
-    _chunks.back().append(std::move(values));
+  auto& mutable_chunk = _chunks.back();
+  mutable_chunk.append(std::move(values));
+  if (mutable_chunk.size() == _chunk_size) {
+    _add_chunk();
   }
 }
 
@@ -44,7 +47,8 @@ uint64_t Table::row_count() const {
     return 0;
   }
 
-  return (chunk_count() - 1) * chunk_size() + _chunks.back().size();
+  return std::reduce(_chunks.begin(), _chunks.end(), uint64_t{0},
+                     [](const auto sum, const Chunk& chunk) { return sum + chunk.size(); });
 }
 
 ChunkID Table::chunk_count() const { return ChunkID{static_cast<uint32_t>(_chunks.size())}; }
@@ -87,15 +91,36 @@ void Table::emplace_chunk(Chunk&& chunk) {
   }
 }
 
-Chunk& Table::_add_chunk() {
+void Table::compress_chunk(ChunkID chunk_id) {
+  Assert(chunk_id < _chunks.size() - 1, "Last chunk is mutable and cannot be compressed");
+  {
+    auto guard = std::lock_guard{_compression_mutex};
+    if (_compressed_chunks[chunk_id]) {
+      return;
+    }
+
+    _compressed_chunks[chunk_id] = true;
+  }
+
+  Chunk compressed_chunk;
+  const auto& chunk = get_chunk(chunk_id);
+  for (ColumnID column_id{0}; column_id < chunk.column_count(); ++column_id) {
+    const auto segment = chunk.get_segment(column_id);
+    const auto& column_type = _column_types[column_id];
+    const auto compressed_segment = make_shared_by_data_type<BaseSegment, DictionarySegment>(column_type, segment);
+    compressed_chunk.add_segment(std::move(compressed_segment));
+  }
+
+  _chunks[chunk_id] = std::move(compressed_chunk);
+}
+
+void Table::_add_chunk() {
   Chunk chunk;
   for (const auto& type : _column_types) {
     chunk.add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(type));
   }
 
-  return _chunks.emplace_back(std::move(chunk));
+  _chunks.emplace_back(std::move(chunk));
 }
-
-void Table::compress_chunk(ChunkID chunk_id) { throw std::runtime_error("Implement Table::compress_chunk"); }
 
 }  // namespace opossum

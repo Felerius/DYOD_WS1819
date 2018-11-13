@@ -85,8 +85,12 @@ class Table : private Noncopyable {
   std::map<std::string, ColumnID> _name_column_map;
   std::vector<std::string> _column_names;
   std::vector<std::string> _column_types;
+  // Bitset to track chunks which are either compressed or currently being compressed.
+  std::vector<bool> _compressed_chunks;
+  // Mutex to protect concurrent accesses to _compressed_chunks
+  std::mutex _compression_mutex;
 
  private:
-  Chunk& _add_chunk();
+  void _add_chunk();
 };
 }  // namespace opossum
