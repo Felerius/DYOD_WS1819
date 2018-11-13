@@ -25,7 +25,7 @@ class Table : private Noncopyable {
   // creates a table
   // the parameter specifies the maximum chunk size, i.e., partition size
   // default is the maximum chunk size minus 1. A table holds always at least one chunk
-  explicit Table(uint32_t chunk_size = std::numeric_limits<ChunkOffset>::max() - 1);
+  explicit Table(const uint32_t chunk_size = std::numeric_limits<ChunkOffset>::max() - 1);
 
   // we need to explicitly set the move constructor to default when
   // we overwrite the copy constructor
@@ -83,8 +83,12 @@ class Table : private Noncopyable {
   uint32_t _chunk_size;
   std::vector<Chunk> _chunks;
   std::map<std::string, ColumnID> _name_column_map;
-  std::vector<std::string> _column_names;
+  std::vector<std::string> _column_names;  // TODO(student): Does the performance boost justify the duplicated data structure?
   std::vector<std::string> _column_types;
+  // Bitset to track chunks which are either compressed or currently being compressed.
+  std::vector<bool> _compressed_chunks;
+  // Mutex to protect concurrent accesses to _compressed_chunks
+  std::mutex _compression_mutex;
 
  private:
   void _add_chunk();

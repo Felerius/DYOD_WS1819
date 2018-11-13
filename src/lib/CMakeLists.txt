@@ -8,6 +8,8 @@ set(
     storage/chunk.cpp
     storage/chunk.hpp
     storage/dictionary_segment.hpp
+    storage/fitted_attribute_vector.cpp
+    storage/fitted_attribute_vector.hpp
     storage/storage_manager.cpp
     storage/storage_manager.hpp
     storage/table.cpp

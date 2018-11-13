@@ -15,6 +15,7 @@ StorageManager& StorageManager::get() {
 }
 
 void StorageManager::add_table(const std::string& name, std::shared_ptr<Table> table) {
+  DebugAssert(!has_table(name), "Table with that name already exists");
   _name_table_map.emplace(name, table);
 }
 
@@ -23,27 +24,25 @@ void StorageManager::drop_table(const std::string& name) {
   _name_table_map.erase(name);
 }
 
-std::shared_ptr<Table> StorageManager::get_table(const std::string& name) const {
-  DebugAssert(has_table(name), "Cannot get a table that does not exist");
-  return _name_table_map.at(name);
-}
+std::shared_ptr<Table> StorageManager::get_table(const std::string& name) const { return _name_table_map.at(name); }
 
-bool StorageManager::has_table(const std::string& name) const { return _name_table_map.count(name) == 1; }
+bool StorageManager::has_table(const std::string& name) const {
+  return _name_table_map.find(name) != _name_table_map.end();
+}
 
 std::vector<std::string> StorageManager::table_names() const {
   auto keys = std::vector<std::string>();
-  for (const auto& key_val_pair : _name_table_map) {
-    keys.emplace_back(key_val_pair.first);
+  for (const auto& [key, _] : _name_table_map) {
+    keys.emplace_back(key);
   }
   return keys;
 }
 
 void StorageManager::print(std::ostream& out) const {
   out << "NAME, COLUMNS, ROWS, CHUNKS\n";
-  for (const auto& key_val_pair : _name_table_map) {
-    const auto& table = _name_table_map.at(key_val_pair.first);
-    out << key_val_pair.first << "\t" << table->column_count() << "\t" << table->row_count() << "\t"
-        << table->chunk_count() << "\n";
+  for (const auto& [key, _] : _name_table_map) {
+    const auto& table = _name_table_map.at(key);
+    out << key << "\t" << table->column_count() << "\t" << table->row_count() << "\t" << table->chunk_count() << "\n";
   }
 }
 
