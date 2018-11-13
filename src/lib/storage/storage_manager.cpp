@@ -25,7 +25,6 @@ void StorageManager::drop_table(const std::string& name) {
 }
 
 std::shared_ptr<Table> StorageManager::get_table(const std::string& name) const {
-  DebugAssert(has_table(name), "Cannot get a table that does not exist");
   return _name_table_map.at(name);
 }
 
