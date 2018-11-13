@@ -47,8 +47,8 @@ uint64_t Table::row_count() const {
     return 0;
   }
 
-  return std::reduce(_chunks.begin(), _chunks.end(), uint64_t{0},
-                     [](const auto sum, const Chunk& chunk) { return sum + chunk.size(); });
+  return std::accumulate(_chunks.begin(), _chunks.end(), uint64_t{0},
+                         [](const auto sum, const Chunk& chunk) { return sum + chunk.size(); });
 }
 
 ChunkID Table::chunk_count() const { return ChunkID{static_cast<uint32_t>(_chunks.size())}; }
@@ -84,6 +84,8 @@ const Chunk& Table::get_chunk(ChunkID chunk_id) const {
 }
 
 void Table::emplace_chunk(Chunk&& chunk) {
+  DebugAssert(chunk.column_count() == column_count(), "chunk and table must have equal column count for emplace");
+
   if (_chunks.back().size() == 0) {
     _chunks.back() = std::move(chunk);
   } else {
