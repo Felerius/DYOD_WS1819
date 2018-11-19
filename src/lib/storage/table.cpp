@@ -30,9 +30,6 @@ void Table::add_column(const std::string& name, const std::string& type) {
   _column_names.emplace_back(name);
   _column_types.emplace_back(type);
   _chunks.front().add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(type));
-  // No locking needed: No elements in table, so no full chunks and thus
-  // nothing which might be compressed concurrently.
-  _compressed_chunks.emplace_back(false);
 }
 
 void Table::append(std::vector<AllTypeVariant> values) {
@@ -130,11 +127,11 @@ void Table::_add_chunk() {
     chunk.add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(type));
   }
 
-  _chunks.emplace_back(std::move(chunk));
-}
-
-void emplace_chunk(Chunk chunk) {
-  // Implementation goes here
+  {
+    auto guard = std::lock_guard{_compression_mutex};
+    _chunks.emplace_back(std::move(chunk));
+    _compressed_chunks.emplace_back(false);
+  }
 }
 
 }  // namespace opossum
