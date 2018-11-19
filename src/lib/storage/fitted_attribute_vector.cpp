@@ -1,5 +1,7 @@
 #include "fitted_attribute_vector.hpp"
 
+#include <limits>
+
 #include "../utils/assert.hpp"
 
 namespace opossum {

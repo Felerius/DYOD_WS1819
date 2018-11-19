@@ -102,7 +102,8 @@ void BaseTest::_print_matrix(const BaseTest::Matrix& matrix) {
       std::cout << "Got: " << tleft.column_name(column_id) << " (" << tleft.column_type(column_id) << ")" << std::endl;
       std::cout << "Expected: " << tright.column_name(column_id) << " (" << tright.column_type(column_id) << ")"
                 << std::endl;
-      std::cout << "Expected: " << tright.column_name(column_id) << " (" << tright.column_type(column_id) << ")" << std::endl;
+      std::cout << "Expected: " << tright.column_name(column_id) << " (" << tright.column_type(column_id) << ")"
+                << std::endl;
       return ::testing::AssertionFailure() << "Table schema is different.";
     }
   }
