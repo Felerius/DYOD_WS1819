@@ -1,5 +1,7 @@
 #include "fitted_attribute_vector.hpp"
 
+#include "../utils/assert.hpp"
+
 namespace opossum {
 
 template <typename T>
@@ -12,6 +14,8 @@ ValueID FittedAttributeVector<T>::get(const size_t i) const {
 
 template <typename T>
 void FittedAttributeVector<T>::set(const size_t i, const ValueID value_id) {
+  DebugAssert(static_cast<uint32_t>(value_id) <= std::numeric_limits<T>::max(),
+              "Value id out of range for value id type");
   _indices[i] = value_id;
 }
 
