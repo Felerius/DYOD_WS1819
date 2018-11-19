@@ -17,13 +17,11 @@
 
 namespace opossum {
 
-<<<<<<< HEAD
 Table::Table(const uint32_t chunk_size) : _chunk_size{chunk_size} { _add_chunk(); }
-=======
+
 void Table::add_column_definition(const std::string& name, const std::string& type) {
   // Implementation goes here
 }
->>>>>>> 1dc4e91a3598f78b8784022b694788dc29aae132
 
 void Table::add_column(const std::string& name, const std::string& type) {
   DebugAssert(row_count() == 0, "Columns can only be appended to empty tables");
