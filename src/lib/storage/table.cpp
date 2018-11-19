@@ -20,15 +20,15 @@ namespace opossum {
 Table::Table(const uint32_t chunk_size) : _chunk_size{chunk_size} { _add_chunk(); }
 
 void Table::add_column_definition(const std::string& name, const std::string& type) {
-  // Implementation goes here
-}
-
-void Table::add_column(const std::string& name, const std::string& type) {
   DebugAssert(row_count() == 0, "Columns can only be appended to empty tables");
   DebugAssert(_name_column_map.find(name) == _name_column_map.end(), "Column with that name already exists");
   _name_column_map.emplace(name, ColumnID{column_count()});
   _column_names.emplace_back(name);
   _column_types.emplace_back(type);
+}
+
+void Table::add_column(const std::string& name, const std::string& type) {
+  add_column_definition(name, type);
   _chunks.front().add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(type));
 }
 
