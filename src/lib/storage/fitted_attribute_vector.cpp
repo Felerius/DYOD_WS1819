@@ -31,6 +31,11 @@ AttributeVectorWidth FittedAttributeVector<T>::width() const {
   return sizeof(T);
 }
 
+template <class T>
+const std::vector<T>& FittedAttributeVector<T>::indices() const {
+  return _indices;
+}
+
 template class FittedAttributeVector<uint8_t>;
 template class FittedAttributeVector<uint16_t>;
 template class FittedAttributeVector<uint32_t>;

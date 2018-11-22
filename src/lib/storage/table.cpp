@@ -99,7 +99,6 @@ void Table::emplace_chunk(Chunk&& chunk) {
 }
 
 void Table::compress_chunk(ChunkID chunk_id) {
-  Assert(chunk_id < _chunks.size() - 1, "Last chunk is mutable and cannot be compressed");
   {
     auto guard = std::lock_guard{_compression_mutex};
     if (_compressed_chunks[chunk_id]) {
