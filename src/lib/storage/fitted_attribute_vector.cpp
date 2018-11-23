@@ -1,6 +1,7 @@
 #include "fitted_attribute_vector.hpp"
 
 #include <limits>
+#include <vector>
 
 #include "../utils/assert.hpp"
 

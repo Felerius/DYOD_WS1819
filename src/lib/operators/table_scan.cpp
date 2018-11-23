@@ -1,6 +1,9 @@
 #include "table_scan.hpp"
 
 #include <functional>
+#include <memory>
+#include <utility>
+#include <vector>
 
 #include "all_type_variant.hpp"
 #include "resolve_type.hpp"
@@ -100,6 +103,7 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::_on_execute_internal(T
   const auto search_value = type_cast<T>(outer._search_value);
   const auto input_table = outer._input_table_left();
   auto pos_list = std::make_shared<PosList>();
+  std::shared_ptr<const Table> referenced_table = input_table;
 
   for (ChunkID chunk_id{0}; chunk_id < input_table->chunk_count(); ++chunk_id) {
     const auto& chunk = input_table->get_chunk(chunk_id);
@@ -112,13 +116,14 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::_on_execute_internal(T
     } else if (const auto reference_segment = std::dynamic_pointer_cast<ReferenceSegment>(segment);
                reference_segment != nullptr) {
       _scan_reference_segment<scan_op>(*pos_list, chunk_id, search_value, *reference_segment);
+      referenced_table = reference_segment->referenced_table();
     }
   }
 
   auto result_table = std::make_shared<Table>();
   Chunk result_chunk;
   for (ColumnID column_id{0}; column_id < input_table->column_count(); ++column_id) {
-    auto segment = std::make_shared<ReferenceSegment>(input_table, column_id, pos_list);
+    auto segment = std::make_shared<ReferenceSegment>(referenced_table, column_id, pos_list);
     result_chunk.add_segment(segment);
     result_table->add_column_definition(input_table->column_name(column_id), input_table->column_type(column_id));
   }
@@ -173,10 +178,7 @@ void TableScan::TableScanImpl<T>::_scan_reference_segment(PosList& pos_list, Chu
                                                           const ReferenceSegment& segment) {
   const auto& table = segment.referenced_table();
   const auto compare = comparator<T, scan_op>();
-  std::cerr << "Pos list size: " << pos_list.size() << '\n';
-  std::cerr << "Pos list size: " << pos_list.size() << '\n';
-  for (const auto& row_id : pos_list) {
-    std::cerr << "Checking chunk_id: " << row_id.chunk_id << ", offset: " << row_id.chunk_offset << '\n';
+  for (const auto& row_id : *segment.pos_list()) {
     const auto& chunk = table->get_chunk(row_id.chunk_id);
     const auto& referenced_segment = *chunk.get_segment(segment.referenced_column_id());
     if (compare(type_cast<T>(referenced_segment[row_id.chunk_offset]), search_value)) {

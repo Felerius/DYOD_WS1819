@@ -1,5 +1,7 @@
 #include "reference_segment.hpp"
 
+#include <memory>
+
 #include "utils/assert.hpp"
 
 namespace opossum {
