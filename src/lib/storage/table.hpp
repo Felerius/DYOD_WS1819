@@ -98,8 +98,5 @@ class Table : private Noncopyable {
   std::vector<bool> _compressed_chunks;
   // Mutex to protect concurrent accesses to _compressed_chunks
   std::mutex _compression_mutex;
-
- private:
-  void _add_chunk();
 };
 }  // namespace opossum

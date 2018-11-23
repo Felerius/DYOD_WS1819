@@ -17,7 +17,7 @@
 
 namespace opossum {
 
-Table::Table(const uint32_t chunk_size) : _chunk_size{chunk_size} { _add_chunk(); }
+Table::Table(const uint32_t chunk_size) : _chunk_size{chunk_size} { create_new_chunk(); }
 
 void Table::add_column_definition(const std::string& name, const std::string& type) {
   DebugAssert(row_count() == 0, "Columns can only be appended to empty tables");
@@ -37,12 +37,21 @@ void Table::append(std::vector<AllTypeVariant> values) {
   auto& mutable_chunk = _chunks.back();
   mutable_chunk.append(std::move(values));
   if (mutable_chunk.size() == _chunk_size) {
-    _add_chunk();
+    create_new_chunk();
   }
 }
 
 void Table::create_new_chunk() {
-  // Implementation goes here
+  Chunk chunk;
+  for (const auto& type : _column_types) {
+    chunk.add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(type));
+  }
+
+  {
+    auto guard = std::lock_guard{_compression_mutex};
+    _chunks.emplace_back(std::move(chunk));
+    _compressed_chunks.emplace_back(false);
+  }
 }
 
 uint16_t Table::column_count() const { return static_cast<uint16_t>(_name_column_map.size()); }
@@ -118,19 +127,6 @@ void Table::compress_chunk(ChunkID chunk_id) {
   }
 
   _chunks[chunk_id] = std::move(compressed_chunk);
-}
-
-void Table::_add_chunk() {
-  Chunk chunk;
-  for (const auto& type : _column_types) {
-    chunk.add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(type));
-  }
-
-  {
-    auto guard = std::lock_guard{_compression_mutex};
-    _chunks.emplace_back(std::move(chunk));
-    _compressed_chunks.emplace_back(false);
-  }
 }
 
 }  // namespace opossum
