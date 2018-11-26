@@ -130,6 +130,14 @@ TEST_F(OperatorsTableScanTest, SingleScanReturnsCorrectRowCount) {
   EXPECT_TABLE_EQ(scan->get_output(), expected_result);
 }
 
+TEST_F(OperatorsTableScanTest, ExceptionOnDifferentDatatypes) {
+  std::shared_ptr<Table> expected_result = load_table("src/test/tables/int_float_filtered2.tbl", 1);
+
+  auto scan = std::make_shared<TableScan>(_table_wrapper, ColumnID{0}, ScanType::OpGreaterThanEquals, 1234.8);
+
+  EXPECT_THROW(scan->execute(), std::exception);
+}
+
 TEST_F(OperatorsTableScanTest, ScanOnDictColumn) {
   // we do not need to check for a non existing value, because that happens automatically when we scan the second chunk
 
