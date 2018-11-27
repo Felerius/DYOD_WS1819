@@ -71,8 +71,22 @@ ScanType TableScan::scan_type() const { return _scan_type; }
 
 const AllTypeVariant& TableScan::search_value() const { return _search_value; }
 
+std::string get_type_string(int index){
+  switch (index) {
+    case 0: return hana::at_c<0>(detail::type_strings);
+    case 1: return hana::at_c<1>(detail::type_strings);
+    case 2: return hana::at_c<2>(detail::type_strings);
+    case 3: return hana::at_c<3>(detail::type_strings);
+    case 4: return hana::at_c<4>(detail::type_strings);
+    default:
+      Fail("unexpected type string index");
+      return "";
+  }
+}
+
 std::shared_ptr<const Table> TableScan::_on_execute() {
   const auto& data_type = _input_table_left()->column_type(_column_id);
+  DebugAssert(data_type == get_type_string(_search_value.which()), "data types of column and search value must match for table scan");
   auto impl = make_unique_by_data_type<BaseTableScanImpl, TableScanImpl>(data_type);
   return impl->on_execute(*this);
 }
@@ -94,6 +108,7 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::on_execute(TableScan& 
       return _on_execute_internal<ScanType::OpLessThanEquals>(outer);
     default:
       Fail("Invalid scan type");
+      return {};
   }
 }
 
@@ -163,9 +178,9 @@ void TableScan::TableScanImpl<T>::_scan_dictionary_segment(PosList& pos_list, Ch
   } else {
     if constexpr (scan_op == ScanType::OpNotEquals) {
       full_scan(attribute_vector, pos_list, chunk_id);
-    } else if (scan_op == ScanType::OpGreaterThan) {
+    } else if constexpr (scan_op == ScanType::OpGreaterThan) {
       scan_attribute_vector<ScanType::OpGreaterThanEquals>(attribute_vector, pos_list, search_value_id, chunk_id);
-    } else if (scan_op == ScanType::OpLessThanEquals) {
+    } else if constexpr (scan_op == ScanType::OpLessThanEquals) {
       scan_attribute_vector<ScanType::OpLessThan>(attribute_vector, pos_list, search_value_id, chunk_id);
     }
     // Operator == and element not in dictionary -> no matching values
@@ -178,6 +193,7 @@ void TableScan::TableScanImpl<T>::_scan_reference_segment(PosList& pos_list, Chu
                                                           const ReferenceSegment& segment) {
   const auto& table = segment.referenced_table();
   const auto compare = comparator<T, scan_op>();
+
   for (const auto& row_id : *segment.pos_list()) {
     const auto& chunk = table->get_chunk(row_id.chunk_id);
     const auto& referenced_segment = *chunk.get_segment(segment.referenced_column_id());
