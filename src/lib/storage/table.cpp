@@ -57,10 +57,7 @@ void Table::create_new_chunk() {
 uint16_t Table::column_count() const { return static_cast<uint16_t>(_name_column_map.size()); }
 
 uint64_t Table::row_count() const {
-  if (_chunks.empty()) {
-    return 0;
-  }
-
+  DebugAssert(!_chunks.empty(), "There should always be at least one chunk");
   return std::accumulate(_chunks.begin(), _chunks.end(), uint64_t{0},
                          [](const auto sum, const Chunk& chunk) { return sum + chunk.size(); });
 }
