@@ -14,7 +14,7 @@ TEST_F(StorageFittedAttributeVectorTest, FixedSize) {
 
 TEST_F(StorageFittedAttributeVectorTest, StoringValues) {
   FittedAttributeVector<uint32_t> attribute_vector(10);
-  for (uint32_t i = 0; i  < 10; ++i) {
+  for (uint32_t i = 0; i < 10; ++i) {
     attribute_vector.set(i, ValueID{100 + i});
   }
 
@@ -43,7 +43,7 @@ TEST_F(StorageFittedAttributeVectorTest, ByteWidth) {
 
 TEST_F(StorageFittedAttributeVectorTest, RetrieveIndices) {
   FittedAttributeVector<uint32_t> attribute_vector(10);
-  for (uint32_t i = 0; i  < 10; ++i) {
+  for (uint32_t i = 0; i < 10; ++i) {
     attribute_vector.set(i, ValueID{100 + i});
   }
 

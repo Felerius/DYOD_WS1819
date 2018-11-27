@@ -6,8 +6,8 @@
 #include <utility>
 #include <vector>
 
-#include "gtest/gtest.h"
 #include "base_test.hpp"
+#include "gtest/gtest.h"
 
 #include "operators/abstract_operator.hpp"
 #include "operators/get_table.hpp"
@@ -17,7 +17,6 @@
 #include "storage/storage_manager.hpp"
 #include "storage/table.hpp"
 #include "types.hpp"
-
 
 namespace opossum {
 
