@@ -72,28 +72,8 @@ ScanType TableScan::scan_type() const { return _scan_type; }
 
 const AllTypeVariant& TableScan::search_value() const { return _search_value; }
 
-std::string get_type_string(int index) {
-  switch (index) {
-    case 0:
-      return hana::at_c<0>(detail::type_strings);
-    case 1:
-      return hana::at_c<1>(detail::type_strings);
-    case 2:
-      return hana::at_c<2>(detail::type_strings);
-    case 3:
-      return hana::at_c<3>(detail::type_strings);
-    case 4:
-      return hana::at_c<4>(detail::type_strings);
-    default:
-      Fail("unexpected type string index");
-      return "";
-  }
-}
-
 std::shared_ptr<const Table> TableScan::_on_execute() {
   const auto& data_type = _input_table_left()->column_type(_column_id);
-  DebugAssert(data_type == get_type_string(_search_value.which()),
-              "data types of column and search value must match for table scan");
   auto impl = make_unique_by_data_type<BaseTableScanImpl, TableScanImpl>(data_type);
   return impl->on_execute(*this);
 }
@@ -122,7 +102,8 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::on_execute(TableScan& 
 template <class T>
 template <ScanType scan_op>
 std::shared_ptr<const Table> TableScan::TableScanImpl<T>::_on_execute_internal(TableScan& outer) {
-  const auto search_value = type_cast<T>(outer._search_value);
+  // Throws an exception if the type of search_value does not match the column type
+  const auto search_value = get<T>(outer._search_value);
   const auto input_table = outer._input_table_left();
   auto pos_list = std::make_shared<PosList>();
   std::shared_ptr<const Table> referenced_table = input_table;
