@@ -30,7 +30,7 @@ class OperatorsPrintTest : public BaseTest {
 
   uint32_t chunk_size = 10;
 
-  std::shared_ptr<GetTable>(gt);
+  std::shared_ptr<GetTable> gt;
   std::shared_ptr<Table> t = nullptr;
 };
 

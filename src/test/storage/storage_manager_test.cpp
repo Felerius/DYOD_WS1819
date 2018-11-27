@@ -59,7 +59,6 @@ TEST_F(StorageStorageManagerTest, TableNames) {
 }
 
 TEST_F(StorageStorageManagerTest, Print) {
-  std::ostream& stream = std::cout;
   auto& sm = StorageManager::get();
   // Just test whether the function can be executed.
   sm.print(std::cout);
