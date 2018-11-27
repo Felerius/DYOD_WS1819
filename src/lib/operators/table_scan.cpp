@@ -223,7 +223,7 @@ void TableScan::TableScanImpl<T>::_scan_reference_segment(PosList& pos_list, Chu
     }
 
     for (const auto& row_id : input_pos_list) {
-      auto[is_value_segment, segment_idx] = segment_mapping[row_id.chunk_id];
+      const auto& [is_value_segment, segment_idx] = segment_mapping[row_id.chunk_id];
       auto value = is_value_segment ? value_segments[segment_idx]->values()[row_id.chunk_offset]
                                     : dict_segments[segment_idx]->get(row_id.chunk_offset);
       if (compare(value, search_value)) {
