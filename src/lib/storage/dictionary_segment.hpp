@@ -40,6 +40,7 @@ class DictionarySegment : public BaseSegment {
       temp_dictionary[value] = 0;
     }
     const auto unique_values = temp_dictionary.size();
+    DebugAssert(unique_values < std::numeric_limits<uint32_t>::max(), "Segments cannot be larger than 2^32 items");
 
     // Create dictionary
     _dictionary = std::make_shared<std::vector<T>>(unique_values);
@@ -56,7 +57,6 @@ class DictionarySegment : public BaseSegment {
     } else if (unique_values < std::numeric_limits<uint16_t>::max()) {
       _attribute_vector = std::make_shared<FittedAttributeVector<uint16_t>>(size);
     } else {
-      DebugAssert(unique_values < std::numeric_limits<uint32_t>::max(), "Segments cannot be larger than 2^32 items");
       _attribute_vector = std::make_shared<FittedAttributeVector<uint32_t>>(size);
     }
 

@@ -19,6 +19,8 @@ class FittedAttributeVector : public BaseAttributeVector {
 
   AttributeVectorWidth width() const override;
 
+  const std::vector<T>& indices() const;
+
  private:
   std::vector<T> _indices;
 };

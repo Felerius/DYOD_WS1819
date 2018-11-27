@@ -17,24 +17,19 @@
 
 namespace opossum {
 
-<<<<<<< HEAD
-Table::Table(const uint32_t chunk_size) : _chunk_size{chunk_size} { _add_chunk(); }
-=======
-void Table::add_column_definition(const std::string& name, const std::string& type) {
-  // Implementation goes here
-}
->>>>>>> 1dc4e91a3598f78b8784022b694788dc29aae132
+Table::Table(const uint32_t chunk_size) : _chunk_size{chunk_size} { create_new_chunk(); }
 
-void Table::add_column(const std::string& name, const std::string& type) {
+void Table::add_column_definition(const std::string& name, const std::string& type) {
   DebugAssert(row_count() == 0, "Columns can only be appended to empty tables");
   DebugAssert(_name_column_map.find(name) == _name_column_map.end(), "Column with that name already exists");
   _name_column_map.emplace(name, ColumnID{column_count()});
   _column_names.emplace_back(name);
   _column_types.emplace_back(type);
+}
+
+void Table::add_column(const std::string& name, const std::string& type) {
+  add_column_definition(name, type);
   _chunks.front().add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(type));
-  // No locking needed: No elements in table, so no full chunks and thus
-  // nothing which might be compressed concurrently.
-  _compressed_chunks.emplace_back(false);
 }
 
 void Table::append(std::vector<AllTypeVariant> values) {
@@ -42,21 +37,27 @@ void Table::append(std::vector<AllTypeVariant> values) {
   auto& mutable_chunk = _chunks.back();
   mutable_chunk.append(std::move(values));
   if (mutable_chunk.size() == _chunk_size) {
-    _add_chunk();
+    create_new_chunk();
   }
 }
 
 void Table::create_new_chunk() {
-  // Implementation goes here
+  Chunk chunk;
+  for (const auto& type : _column_types) {
+    chunk.add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(type));
+  }
+
+  {
+    auto guard = std::lock_guard{_compression_mutex};
+    _chunks.emplace_back(std::move(chunk));
+    _compressed_chunks.emplace_back(false);
+  }
 }
 
 uint16_t Table::column_count() const { return static_cast<uint16_t>(_name_column_map.size()); }
 
 uint64_t Table::row_count() const {
-  if (_chunks.empty()) {
-    return 0;
-  }
-
+  DebugAssert(!_chunks.empty(), "There should always be at least one chunk");
   return std::accumulate(_chunks.begin(), _chunks.end(), uint64_t{0},
                          [](const auto sum, const Chunk& chunk) { return sum + chunk.size(); });
 }
@@ -104,7 +105,6 @@ void Table::emplace_chunk(Chunk&& chunk) {
 }
 
 void Table::compress_chunk(ChunkID chunk_id) {
-  Assert(chunk_id < _chunks.size() - 1, "Last chunk is mutable and cannot be compressed");
   {
     auto guard = std::lock_guard{_compression_mutex};
     if (_compressed_chunks[chunk_id]) {
@@ -124,19 +124,6 @@ void Table::compress_chunk(ChunkID chunk_id) {
   }
 
   _chunks[chunk_id] = std::move(compressed_chunk);
-}
-
-void Table::_add_chunk() {
-  Chunk chunk;
-  for (const auto& type : _column_types) {
-    chunk.add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(type));
-  }
-
-  _chunks.emplace_back(std::move(chunk));
-}
-
-void emplace_chunk(Chunk chunk) {
-  // Implementation goes here
 }
 
 }  // namespace opossum

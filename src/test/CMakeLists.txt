@@ -15,6 +15,7 @@ set(
     operators/table_scan_test.cpp
     storage/chunk_test.cpp
     storage/dictionary_segment_test.cpp
+    storage/fitted_attribute_vector_test.cpp
     storage/reference_segment_test.cpp
     storage/storage_manager_test.cpp
     storage/table_test.cpp
