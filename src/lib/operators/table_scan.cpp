@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -71,13 +72,18 @@ ScanType TableScan::scan_type() const { return _scan_type; }
 
 const AllTypeVariant& TableScan::search_value() const { return _search_value; }
 
-std::string get_type_string(int index){
+std::string get_type_string(int index) {
   switch (index) {
-    case 0: return hana::at_c<0>(detail::type_strings);
-    case 1: return hana::at_c<1>(detail::type_strings);
-    case 2: return hana::at_c<2>(detail::type_strings);
-    case 3: return hana::at_c<3>(detail::type_strings);
-    case 4: return hana::at_c<4>(detail::type_strings);
+    case 0:
+      return hana::at_c<0>(detail::type_strings);
+    case 1:
+      return hana::at_c<1>(detail::type_strings);
+    case 2:
+      return hana::at_c<2>(detail::type_strings);
+    case 3:
+      return hana::at_c<3>(detail::type_strings);
+    case 4:
+      return hana::at_c<4>(detail::type_strings);
     default:
       Fail("unexpected type string index");
       return "";
@@ -86,7 +92,8 @@ std::string get_type_string(int index){
 
 std::shared_ptr<const Table> TableScan::_on_execute() {
   const auto& data_type = _input_table_left()->column_type(_column_id);
-  DebugAssert(data_type == get_type_string(_search_value.which()), "data types of column and search value must match for table scan");
+  DebugAssert(data_type == get_type_string(_search_value.which()),
+              "data types of column and search value must match for table scan");
   auto impl = make_unique_by_data_type<BaseTableScanImpl, TableScanImpl>(data_type);
   return impl->on_execute(*this);
 }
@@ -196,9 +203,27 @@ void TableScan::TableScanImpl<T>::_scan_reference_segment(PosList& pos_list, Chu
 
   for (const auto& row_id : *segment.pos_list()) {
     const auto& chunk = table->get_chunk(row_id.chunk_id);
-    const auto& referenced_segment = *chunk.get_segment(segment.referenced_column_id());
-    if (compare(type_cast<T>(referenced_segment[row_id.chunk_offset]), search_value)) {
-      pos_list.emplace_back(row_id);
+    const auto referenced_segment = chunk.get_segment(segment.referenced_column_id());
+
+    if (const auto referenced_value_segment = std::dynamic_pointer_cast<ValueSegment<T>>(referenced_segment);
+        referenced_value_segment != nullptr) {
+      // referencing value segment
+      if (compare(referenced_value_segment->values()[row_id.chunk_offset], search_value)) {
+        pos_list.emplace_back(row_id);
+      }
+    } else if (const auto referenced_dictionary_segment =
+                   std::dynamic_pointer_cast<DictionarySegment<T>>(referenced_segment);
+               referenced_dictionary_segment != nullptr) {
+      // referencing dictionary segment
+      if (compare(referenced_dictionary_segment->get(row_id.chunk_offset), search_value)) {
+        pos_list.emplace_back(row_id);
+      }
+    } else {
+      Fail("only ValueSegment and DictionarySegment may be referenced by a ReferenceSegment");
+      // this is slow because we are calling virtual method (BaseSegment::operator[]) and that returns AllTypeVariant
+      //      if (compare(type_cast<T>((*referenced_segment)[row_id.chunk_offset]), search_value)) {
+      //        pos_list.emplace_back(row_id);
+      //      }
     }
   }
 }
