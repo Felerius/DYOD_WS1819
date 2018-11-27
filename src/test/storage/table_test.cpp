@@ -62,6 +62,11 @@ TEST_F(StorageTableTest, RowCount) {
   EXPECT_EQ(t.row_count(), 3u);
 }
 
+TEST_F(StorageTableTest, GetColumnNames) {
+  std::vector<std::string> expected_column_names{"col_1", "col_2"};
+  EXPECT_EQ(t.column_names(), expected_column_names);
+}
+
 TEST_F(StorageTableTest, GetColumnName) {
   EXPECT_EQ(t.column_name(ColumnID{0}), "col_1");
   EXPECT_EQ(t.column_name(ColumnID{1}), "col_2");
