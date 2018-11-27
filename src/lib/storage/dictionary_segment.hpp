@@ -31,8 +31,6 @@ class DictionarySegment : public BaseSegment {
    * Creates a Dictionary segment from a given value segment.
    */
   explicit DictionarySegment(const std::shared_ptr<BaseSegment>& base_segment) {
-    DebugAssert(unique_values < std::numeric_limits<uint32_t>::max(), "Segments cannot be larger than 2^32 items");
-
     const auto size = base_segment->size();
 
     // Create map as temporary dictionary
@@ -42,6 +40,7 @@ class DictionarySegment : public BaseSegment {
       temp_dictionary[value] = 0;
     }
     const auto unique_values = temp_dictionary.size();
+    DebugAssert(unique_values < std::numeric_limits<uint32_t>::max(), "Segments cannot be larger than 2^32 items");
 
     // Create dictionary
     _dictionary = std::make_shared<std::vector<T>>(unique_values);
