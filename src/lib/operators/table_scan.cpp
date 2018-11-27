@@ -177,34 +177,58 @@ void TableScan::TableScanImpl<T>::_scan_dictionary_segment(PosList& pos_list, Ch
 
 template <class T>
 template <ScanType scan_op>
-void TableScan::TableScanImpl<T>::_scan_reference_segment(PosList& pos_list, ChunkID chunk_id, const T& search_value,
+void TableScan::TableScanImpl<T>::_scan_reference_segment(PosList& pos_list, ChunkID _chunk_id, const T& search_value,
                                                           const ReferenceSegment& segment) {
-  const auto& table = segment.referenced_table();
+  const auto& table = *segment.referenced_table();
   const auto compare = comparator<T, scan_op>();
+  const auto& input_pos_list = *segment.pos_list();
 
-  for (const auto& row_id : *segment.pos_list()) {
-    const auto& chunk = table->get_chunk(row_id.chunk_id);
-    const auto referenced_segment = chunk.get_segment(segment.referenced_column_id());
+  // Heuristic to fall back to virtual operator[] call for each element for small
+  // ReferenceSegments to avoid dynamic_casts and allocation of vectors. A more
+  // optimal cutoff point could be determined by benchmarking.
+  if (input_pos_list.size() < 5 * table.chunk_count()) {
+    for (const auto& row_id : input_pos_list) {
+      const auto& chunk = table.get_chunk(row_id.chunk_id);
+      const auto& referenced_segment = *chunk.get_segment(segment.referenced_column_id());
 
-    if (const auto referenced_value_segment = std::dynamic_pointer_cast<ValueSegment<T>>(referenced_segment);
-        referenced_value_segment != nullptr) {
-      // referencing value segment
-      if (compare(referenced_value_segment->values()[row_id.chunk_offset], search_value)) {
+      if (compare(type_cast<T>(referenced_segment[row_id.chunk_offset]), search_value)) {
         pos_list.emplace_back(row_id);
       }
-    } else if (const auto referenced_dictionary_segment =
-                   std::dynamic_pointer_cast<DictionarySegment<T>>(referenced_segment);
-               referenced_dictionary_segment != nullptr) {
-      // referencing dictionary segment
-      if (compare(referenced_dictionary_segment->get(row_id.chunk_offset), search_value)) {
+    }
+  } else {
+    // Determine types of all segments beforehand, to allow inlining and other optimizations
+    // not possible when using virtual calls to operator[].
+    std::vector<std::shared_ptr<ValueSegment<T>>> value_segments;
+    std::vector<std::shared_ptr<DictionarySegment<T>>> dict_segments;
+    // Maps chunks in the referenced table to the two vectors above.
+    // The initial bool is true if the segment is a value segment.
+    std::vector<std::pair<bool, size_t>> segment_mapping;
+
+    for (ChunkID chunk_id{0}; chunk_id < table.chunk_count(); ++chunk_id) {
+      const auto& referenced_chunk = table.get_chunk(chunk_id);
+      const auto referenced_segment = referenced_chunk.get_segment(segment.referenced_column_id());
+
+      if (const auto referenced_value_segment = std::dynamic_pointer_cast<ValueSegment<T>>(referenced_segment);
+          referenced_value_segment != nullptr) {
+        segment_mapping.emplace_back(true, value_segments.size());
+        value_segments.emplace_back(move(referenced_value_segment));
+      } else if (const auto referenced_dict_segment =
+                     std::dynamic_pointer_cast<DictionarySegment<T>>(referenced_segment);
+                 referenced_dict_segment != nullptr) {
+        segment_mapping.emplace_back(false, dict_segments.size());
+        dict_segments.emplace_back(move(referenced_dict_segment));
+      } else {
+        Fail("only ValueSegment and DictionarySegment may be referenced by a ReferenceSegment");
+      }
+    }
+
+    for (const auto& row_id : input_pos_list) {
+      auto [is_value_segment, segment_idx] = segment_mapping[row_id.chunk_id];
+      auto value = is_value_segment ? value_segments[segment_idx]->values()[row_id.chunk_offset]
+                                    : dict_segments[segment_idx]->get(row_id.chunk_offset);
+      if (compare(value, search_value)) {
         pos_list.emplace_back(row_id);
       }
-    } else {
-      Fail("only ValueSegment and DictionarySegment may be referenced by a ReferenceSegment");
-      // this is slow because we are calling virtual method (BaseSegment::operator[]) and that returns AllTypeVariant
-      //      if (compare(type_cast<T>((*referenced_segment)[row_id.chunk_offset]), search_value)) {
-      //        pos_list.emplace_back(row_id);
-      //      }
     }
   }
 }
