@@ -50,4 +50,17 @@ TEST_F(StorageStorageManagerTest, HasTable) {
   EXPECT_EQ(sm.has_table("first_table"), true);
 }
 
+TEST_F(StorageStorageManagerTest, TableNames) {
+  auto& sm = StorageManager::get();
+  std::vector<std::string> expected_names{"first_table", "second_table"};
+  EXPECT_EQ(sm.table_names(), expected_names);
+}
+
+TEST_F(StorageStorageManagerTest, Print) {
+  std::ostream& stream = std::cout;
+  auto& sm = StorageManager::get();
+  // Just test whether the function can be executed.
+  sm.print(std::cout);
+}
+
 }  // namespace opossum
